@@ -1,9 +1,8 @@
 #[cfg(not(feature = "library"))]
 use crate::error::ContractError;
-use crate::execute;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg, MigrateMsg};
-use crate::query;
+use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use crate::state;
+use crate::{execute, query};
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
@@ -31,9 +30,13 @@ pub fn execute(
   msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
   match msg {
-    ExecuteMsg::TransferOwnership { new_owner } => {
-      execute::transfer_ownership(deps, env, info, &new_owner)
+    ExecuteMsg::PlaceWagers { address, wagers } => {
+      execute::place_wagers(deps, env, info, address, &wagers)
     },
+    ExecuteMsg::ResolveOutcome { candidates } => {
+      execute::resolve_outcome(deps, env, info, &candidates)
+    },
+    ExecuteMsg::Cancel {} => execute::cancel(deps, env, info),
   }
 }
 
@@ -44,7 +47,7 @@ pub fn query(
   msg: QueryMsg,
 ) -> StdResult<Binary> {
   let result = match msg {
-    QueryMsg::Select { fields } => to_binary(&query::select(deps, fields)?),
+    QueryMsg::Select { fields, wallet } => to_binary(&query::select(deps, fields, wallet)?),
   }?;
   Ok(result)
 }
